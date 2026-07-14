@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/select"
 import { Save } from "lucide-react"
 import type { VehicleFormData } from "./vehicle-register-preview"
+import { RegisterComboBox } from "./register-combo-box"
+import { getBrands, getModels } from "@/lib/api"
 
 const types = [
   { label: "Car", value: "car" },
@@ -40,6 +43,19 @@ type Props = {
 }
 
 export function RegisterForm({ formData, onChange, onSubmit }: Props) {
+  const [brands, setBrands] = useState<{id: number, name: string}[]>([])
+  const [models, setModels] = useState<{id: number, name: string}[]>([])
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null)
+
+  useEffect(() => {
+    getBrands().then(setBrands)
+  }, [])
+
+  useEffect(() => {
+    if (!selectedBrandId) { setModels([]); return }
+    getModels(selectedBrandId).then(setModels)
+  }, [selectedBrandId])
+
   return (
     <form className="flex flex-col gap-4 @5xl/main:grid @5xl/main:grid-cols-3" onSubmit={onSubmit}>
 
@@ -65,21 +81,31 @@ export function RegisterForm({ formData, onChange, onSubmit }: Props) {
             </Select>
           </Field>
           <Field>
-            <FieldLabel htmlFor="brand">Brand</FieldLabel>
-            <Input
-              id="brand"
-              placeholder="Opel, Fiat, Mercedes, Iveco..."
+            <FieldLabel>Brand</FieldLabel>
+            <RegisterComboBox
+              items={brands}
               value={formData.brand}
-              onChange={(e) => onChange("brand", e.target.value)}
+              onSelect={(name, id) => {
+                onChange("brand", name)
+                onChange("brandId", String(id))
+                setSelectedBrandId(id)
+                onChange("model", "")
+                onChange("modelId", "0")
+              }}
+              label="Brand"
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="model">Model</FieldLabel>
-            <Input
-              id="model"
-              placeholder="Zafira, Panda, W211, Daily..."
+            <FieldLabel>Model</FieldLabel>
+            <RegisterComboBox
+              items={models}
               value={formData.model}
-              onChange={(e) => onChange("model", e.target.value)}
+              onSelect={(name, id) => {
+                onChange("model", name)
+                onChange("modelId", String(id))
+              }}
+              label="Model"
+              disabled={!selectedBrandId}
             />
           </Field>
           <Field>

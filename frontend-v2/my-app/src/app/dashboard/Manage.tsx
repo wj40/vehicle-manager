@@ -54,6 +54,8 @@ export default function Manage() {
       type: vehicle.type,
       brand: brandMap.get(vehicle.brand_id) ?? String(vehicle.brand_id),
       model: modelMap.get(vehicle.model_id) ?? String(vehicle.model_id),
+      brandId: String(vehicle.brand_id),
+      modelId: String(vehicle.model_id),
       regNumber: vehicle.reg_number,
       vinNumber: vehicle.vin_number,
       productionYear: vehicle.productionYear.toString(),

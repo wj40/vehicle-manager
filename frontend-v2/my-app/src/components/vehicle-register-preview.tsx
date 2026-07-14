@@ -11,6 +11,8 @@ export type VehicleFormData = {
   type: string
   brand: string
   model: string
+  brandId: string
+  modelId: string
   productionYear: string
   status: string
   regNumber: string

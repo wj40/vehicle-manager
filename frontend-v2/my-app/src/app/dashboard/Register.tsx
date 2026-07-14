@@ -12,6 +12,8 @@ const initialFormData: VehicleFormData = {
   type: "",
   brand: "",
   model: "",
+  brandId: "",
+  modelId: "",
   regNumber: "",
   vinNumber: "",
   productionYear: "",
@@ -30,8 +32,8 @@ export default function Register() {
 
     register({
       type: formData.type,
-      brandId: formData.brand,
-      modelId: formData.model,
+      brand_id: parseInt(formData.brandId, 10),
+      model_id: parseInt(formData.modelId, 10),
       reg_number: formData.regNumber,
       vin_number: formData.vinNumber,
       productionYear: formData.productionYear,
