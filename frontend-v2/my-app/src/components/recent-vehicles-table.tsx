@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from "react"
 import {
   Table,
   TableBody,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "./ui/badge"
 import { type Vehicle } from "@/types/vehicle"
+import { getBrands, getModels } from "@/lib/api"
 
 type RecentVehiclesTableProps = {
   vehicles: Vehicle[]
@@ -26,6 +28,28 @@ const statusDot: Record<string, string> = {
 }
 
 export function RecentVehiclesTable({vehicles}: RecentVehiclesTableProps) {
+  const [brandMap, setBrandMap] = useState<Map<number, string>>(new Map())
+  const [modelMap, setModelMap] = useState<Map<number, string>>(new Map())
+  
+  useEffect(() => {
+  getBrands().then((data: {id: number, name: string}[]) => setBrandMap(new Map(data.map(b => [b.id, b.name]))))    }, [])
+    
+  const uniqueBrandIds = useMemo(
+    () => [...new Set(vehicles.map(v => v.brand_id))],
+    [vehicles]
+  )
+  
+  useEffect(() => {
+    if(uniqueBrandIds.length === 0) return
+    Promise.all(uniqueBrandIds.map(id => getModels(id)))
+      .then(results => {
+  
+        const all = results.flat()
+        setModelMap(new Map(all.map(m => [m.id, m.name])))
+      })
+  }, [uniqueBrandIds])
+
+    
   return (
     <div className="rounded-xl border bg-card">
       <div className="border-b px-4 py-3">
@@ -48,8 +72,8 @@ export function RecentVehiclesTable({vehicles}: RecentVehiclesTableProps) {
             <TableRow key={vehicle.id}>
               <TableCell className="font-medium">{vehicle.id}</TableCell>
               <TableCell>{vehicle.type}</TableCell>
-              <TableCell>{vehicle.brand}</TableCell>
-              <TableCell>{vehicle.model}</TableCell>
+              <TableCell>{brandMap.get(vehicle.brand_id) ?? vehicle.brand_id}</TableCell>
+              <TableCell>{modelMap.get(vehicle.model_id) ?? vehicle.brand_id}</TableCell>
               <TableCell className="text-right">{vehicle.productionYear}</TableCell>
               <TableCell className="text-right">
                 <Badge

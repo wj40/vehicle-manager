@@ -87,6 +87,22 @@ final class VehicleController
         return $vehicle->toArray();
     }
 
+    // POST /api/vehicle/{id}/edit
+    public function edit(int $id, array $data): array
+    {
+        $current = $this->vehicleRepository->findById($id);
+        $this->vehicleRepository->updateAllFields(
+            $id,
+            $data['type'] ?? $current->getVehicleType()->value,
+            (int)($data['brand_id'] ?? $current->getBrandId()),
+            (int)($data['model_id'] ?? $current->getModelId()),
+            $data['reg_number'] ?? $current->getRegNumber(),
+            $data['vin_number'] ?? $current->getVinNumber(),
+            (int)($data['productionYear'] ?? $current->getProductionYear())
+        );
+        return ['message' => 'Vehicle updated'];
+    }
+
     // DELETE /api/vehicle/{id}
     public function destroy(int $id): array
     {
@@ -98,5 +114,35 @@ final class VehicleController
     public function history(int $id): array
     {
         return $this->vehicleRepository->showVehicleHistory($id);
+    }
+
+    public function storeBrand(string $name){
+        $this->vehicleRepository->addBrand($name);
+        return ['message' => 'Brand added'];
+    }
+
+    public function updateBrand(int $id, string $name){
+        $this->vehicleRepository->updateBrand($id, $name);
+        return ['message' => 'Brand changed'];
+    }
+
+    public function destroyBrand(int $id){
+        $this->vehicleRepository->deleteBrand($id);
+        return ['message' => 'Brand removed'];
+    }
+
+    public function destroyModel(int $id){
+        $this->vehicleRepository->deleteModel($id);
+        return ['message' => 'Model removed'];
+    }
+
+    public function updateModel(int $id, string $name){
+        $this->vehicleRepository->updateModel($id, $name);
+        return ['message' => 'Model changed'];
+    }
+
+    public function storeModel(array $data){
+        $this->vehicleRepository->addModel((int)$data['brand_id'], $data['name']);
+        return ['message' => 'Model added'];
     }
 }

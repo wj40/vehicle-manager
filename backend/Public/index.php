@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Wjagusiak\VehicleManager\Controller\VehicleController;
+use Wjagusiak\VehicleManager\Exception\BrandInUseException;
+use Wjagusiak\VehicleManager\Exception\VehicleAlreadyExistException;
 use Wjagusiak\VehicleManager\Exception\VehicleAlreadyRentedException;
 use Wjagusiak\VehicleManager\Exception\VehicleAvailableException;
 use Wjagusiak\VehicleManager\Exception\VehicleInServiceException;
@@ -70,11 +72,32 @@ if (str_starts_with($route, 'api/')) {
         } elseif ($method === 'POST' && $action === 'finish-service') {
             $result = $controller->finishService($id);
             http_response_code(200);
+        } elseif ($method === 'POST' && $action === 'edit') {
+            $result = $controller->edit($id, $body);
+            http_response_code(200);
         } elseif ($method === 'DELETE' && $id !== null) {
             $result = $controller->destroy($id);
             http_response_code(200);
         } elseif ($method === 'GET' && $action ==='history'){
             $result = $controller->history($id);
+            http_response_code(200);
+        } elseif ($method === 'POST' && $segments[1] === 'brands' && $id === null){
+            $result = $controller->storeBrand($body['name']);
+            http_response_code(200);
+        } elseif ($method === 'POST' && $segments[1] === 'brands' && $id !== null){
+            $result = $controller->updateBrand($id, $body['name']);
+            http_response_code(200);
+        } elseif ($method === 'DELETE' && $segments[1] === 'brands' && $id !== null){
+            $result = $controller->destroyBrand($id);
+            http_response_code(200);
+        } elseif ($method === 'POST' && $segments[1] === 'models' && $id === null){
+            $result = $controller->storeModel($body);
+            http_response_code(200);
+        } elseif ($method === 'POST' && $segments[1] === 'models' && $id !== null){
+            $result = $controller->updateModel($id, $body['name']);
+            http_response_code(200);
+        } elseif ($method === 'DELETE' && $segments[1] === 'models' && $id !== null){
+            $result = $controller->destroyModel($id);
             http_response_code(200);
         } else {
             http_response_code(404);
@@ -100,6 +123,12 @@ if (str_starts_with($route, 'api/')) {
         $result = ['error' => $e->getMessage()];
     } catch (VehicleAvailableException $e) {
         http_response_code(409);
+        $result = ['error' => $e->getMessage()];
+    } catch (VehicleAlreadyExistException $e) {
+        http_response_code(400);
+        $result = ['error' => $e->getMessage()];
+    } catch (BrandInUseException $e) {
+        http_response_code(400);
         $result = ['error' => $e->getMessage()];
     } catch (\RuntimeException $e) {
         http_response_code(500);

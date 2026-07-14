@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/site-header"
 import {
   SidebarInset,
 } from "@/components/ui/sidebar"
-import { VehicleActionCards } from "@/components/vehicle-action-cards"
+import { Button } from "@/components/ui/button"
 import { VehicleHistoryTable } from "@/components/vehicle-history-table"
 import { toast } from "sonner"
 import { type VehicleHistory } from "@/types/history"
@@ -12,7 +12,8 @@ import SearchVehicleForm from "@/components/search-vehicle-form"
 import { type Vehicle } from "@/types/vehicle"
 import { findAll } from "@/lib/api"
 import { VehicleRegisterPreview, type VehicleFormData } from "@/components/vehicle-register-preview"
-import { manage, deleteVehicle, getBrands, getModels } from "@/lib/api"
+import { VehicleEditForm } from "@/components/vehicle-edit-form"
+import { getBrands, getModels } from "@/lib/api"
 
 export default function Manage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -21,9 +22,14 @@ export default function Manage() {
   const [clearCounter, setClearCounter] = useState(0)
   const [brandMap, setBrandMap] = useState<Map<number, string>>(new Map())
   const [modelMap, setModelMap] = useState<Map<number, string>>(new Map())
+  const [isEditing, setIsEditing] = useState(false)
+  const [editBrands, setEditBrands] = useState<{id: number, name: string}[]>([])
 
   useEffect(() => {
-      getBrands().then((data: {id: number, name: string}[]) => setBrandMap(new Map(data.map(b => [b.id, b.name]))))
+      getBrands().then((data: {id: number, name: string}[]) => {
+        setBrandMap(new Map(data.map(b => [b.id, b.name])))
+        setEditBrands(data)
+      })
     }, [])
     
     const uniqueBrandIds = useMemo(
@@ -69,6 +75,23 @@ export default function Manage() {
     setHistory([])
     setClearCounter(c => c + 1) 
     }
+
+    function handleEdit() {
+      setIsEditing(true)
+    }
+
+    async function handleEditSave() {
+      setIsEditing(false)
+      await findAll().then(setVehicles)
+      if (selectedId) {
+        await findById(selectedId).then(handleSelect)
+      }
+      toast.success("Vehicle updated")
+    }
+
+    function handleEditCancel() {
+      setIsEditing(false)
+    }
     const [vehicleHistory, setHistory] = useState<VehicleHistory[]>([])
 
     useEffect(() => {
@@ -77,48 +100,6 @@ export default function Manage() {
         .then(setHistory)
         .catch((error) => toast.error(error.message))
     }, [selectedId])
-
-    function handleManageButton(actionType: string){
-      if(selectedId != null){
-        if(actionType == "delete"){
-            deleteVehicle(selectedId)
-            .then((data) => toast.success(data.message))
-            .then(() => handleClear())
-            .catch((error) => toast.error(error.message))
-        }else{
-            let actionMessage = ""
-            switch(actionType){
-              case "rent": 
-              actionMessage = "Vehicle rented succesfully"
-              break;
-
-              case "return": 
-              actionMessage = "Vehicle returned succesfully"
-              break;
-
-              case "service": 
-              actionMessage = "Vehicle sent to service succesfully"
-              break;
-
-              case "finish-service": 
-              actionMessage = "Vehicle returned from service succesfully"
-              break;
-
-              default: actionMessage = "Error"
-            }
-            manage(selectedId, actionType)
-            .then(() => toast.success(actionMessage))
-            .then(() => findAll())
-            .then(setVehicles)
-            .then(() => history(selectedId, 'history'))
-            .then(setHistory)
-            .then(() => findById(selectedId))
-            .then(handleSelect)
-            .catch((error) => toast.error(error.message))
-        }
-      }
-    }
-
     
   return (
       <SidebarInset>
@@ -138,7 +119,26 @@ export default function Manage() {
             </div>
 
             <div className="px-4 lg:px-6">
-              {selectedVehicle && <VehicleRegisterPreview formData={selectedVehicle} />}
+              {selectedVehicle && !isEditing && (
+                <div className="relative">
+                  <VehicleRegisterPreview formData={selectedVehicle} />
+                  <div className="mt-2 flex justify-end">
+                    <Button variant="outline" size="sm" onClick={handleEdit}>
+                      Edit vehicle
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {selectedVehicle && isEditing && selectedId && (
+                <VehicleEditForm
+                  vehicle={vehicles.find(v => v.id === selectedId)!}
+                  brands={editBrands}
+                  brandMap={brandMap}
+                  modelMap={modelMap}
+                  onSave={handleEditSave}
+                  onCancel={handleEditCancel}
+                />
+              )}
             </div>
             <VehicleHistoryTable 
             history={vehicleHistory}
