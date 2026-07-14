@@ -5,6 +5,7 @@ use Wjagusiak\VehicleManager\Controller\VehicleController;
 use Wjagusiak\VehicleManager\Exception\VehicleAlreadyRentedException;
 use Wjagusiak\VehicleManager\Exception\VehicleAvailableException;
 use Wjagusiak\VehicleManager\Exception\VehicleInServiceException;
+use Wjagusiak\VehicleManager\Exception\VehicleInvalidReferenceException;
 use Wjagusiak\VehicleManager\Exception\VehicleNotFoundException;
 use Wjagusiak\VehicleManager\Exception\VehicleWrongStatus;
 use Wjagusiak\VehicleManager\Exception\VehicleWrongType;
@@ -33,6 +34,8 @@ if (str_starts_with($route, 'api/')) {
 
     // segments[0] = "api", segments[1] = "vehicle", segments[2] = id (opcjonalnie), segments[3] = akcja (opcjonalnie)
     $id = isset($segments[2]) ? (int)$segments[2] : null;
+    $brandId = isset($segments[2]) ? (int)$segments[2] : null;
+
     
     $action = $segments[3] ?? null;
 
@@ -40,7 +43,13 @@ if (str_starts_with($route, 'api/')) {
     $body = json_decode(file_get_contents('php://input'), true) ?? [];
 
     try{
-        if ($method === 'GET' && $id === null) {
+        if ($method === 'GET' && $segments[1] === 'brands') {
+            $result = $controller->brands();
+            http_response_code(200);
+        } elseif ($method === 'GET' && $segments[1] === 'models') {
+            $result = $controller->models($brandId);
+            http_response_code(200);
+        } elseif ($method === 'GET' && $id === null) {
             $result = $controller->index();
             http_response_code(200);
         } elseif ($method === 'GET' && $id !== null && $action === null) {
@@ -86,7 +95,10 @@ if (str_starts_with($route, 'api/')) {
     } catch (VehicleWrongStatus $e) {
         http_response_code(400);
         $result = ['error' => $e->getMessage()];
-    }catch (VehicleAvailableException $e) {
+    } catch(VehicleInvalidReferenceException $e) {
+        http_response_code(400);
+        $result = ['error' => $e->getMessage()];
+    } catch (VehicleAvailableException $e) {
         http_response_code(409);
         $result = ['error' => $e->getMessage()];
     } catch (\RuntimeException $e) {

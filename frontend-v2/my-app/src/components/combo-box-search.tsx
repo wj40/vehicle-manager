@@ -1,5 +1,5 @@
 "use client"
-
+import { useEffect } from "react"
 import {
   Combobox,
   ComboboxContent,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/combobox"
 import type { Vehicle } from "@/types/vehicle"
 import { useState, useMemo } from "react"
+import { getBrands, getModels } from "@/lib/api"
 
 
 type Props = {
@@ -19,6 +20,27 @@ type Props = {
 
 export function ComboboxSearch({vehicles, onSelect}: Props) {
   const [q, setQ] = useState("")
+  const [brandMap, setBrandMap] = useState<Map<number, string>>(new Map())
+  const [modelMap, setModelMap] = useState<Map<number, string>>(new Map())
+
+  useEffect(() => {
+      getBrands().then((data: {id: number, name: string}[]) => setBrandMap(new Map(data.map(b => [b.id, b.name]))))
+    }, [])
+    
+    const uniqueBrandIds = useMemo(
+      () => [...new Set(vehicles.map(v => v.brand_id))],
+      [vehicles]
+    )
+  
+    useEffect(() => {
+      if(uniqueBrandIds.length === 0) return
+      Promise.all(uniqueBrandIds.map(id => getModels(id)))
+        .then(results => {
+  
+          const all = results.flat()
+          setModelMap(new Map(all.map(m => [m.id, m.name])))
+        })
+    }, [uniqueBrandIds])
 
 
   const query = q.toLowerCase()
@@ -27,8 +49,8 @@ export function ComboboxSearch({vehicles, onSelect}: Props) {
     const fields = [
       { val: v.reg_number, w: 5 },
       { val: v.vin_number, w: 4 },
-      { val: v.brand, w: 2 },
-      { val: v.model, w: 1 },
+      { val: brandMap.get(v.brand_id) ?? "", w: 2 },
+      { val: modelMap.get(v.model_id) ?? "", w: 1 },
     ]
     let s = 0
     for (const { val, w } of fields) {
@@ -48,14 +70,14 @@ export function ComboboxSearch({vehicles, onSelect}: Props) {
   const showResults = filtered.length > 0 && filtered.length <= 10
 
   const displayItems = showResults
-  ? filtered.map(v => `${v.brand} ${v.model} (${v.reg_number})`)
+  ? filtered.map(v => `${brandMap.get(v.brand_id) ?? v.brand_id} ${modelMap.get(v.model_id) ?? v.model_id} (${v.reg_number})`)
   : []
 
   const lookup = useMemo(() => {
   const map = new Map<string, Vehicle>()
-  vehicles.forEach(v => map.set(`${v.brand} ${v.model} (${v.reg_number})`, v))
+  vehicles.forEach(v => map.set(`${brandMap.get(v.brand_id) ?? v.brand_id} ${modelMap.get(v.model_id) ?? v.model_id} (${v.reg_number})`, v))
   return map
-  }, [vehicles])
+  }, [vehicles, brandMap, modelMap])
 
   return (
     <div className="w-full">

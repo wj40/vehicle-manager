@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, Fragment } from "react"
+import { useMemo, useState, useEffect, Fragment } from "react"
 import {
   Table,
   TableBody,
@@ -21,6 +21,7 @@ import {
 import { Car, Truck, Bus, Motorbike, ChevronDown, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight } from "lucide-react"
 import type { Vehicle } from "@/types/vehicle"
 import { VehicleActionCards } from "./vehicle-action-cards"
+import { getBrands, getModels } from "@/lib/api"
 
 
 const typeIcon: Record<string, React.ElementType> = {
@@ -54,6 +55,27 @@ type Props = {
 export function AllVehiclesTable({vehicles, onAction, expandedId, onToggleExpand}: Props) {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<string>("10")
+  const [brandMap, setBrandMap] = useState<Map<number, string>>(new Map())
+  const [modelMap, setModelMap] = useState<Map<number, string>>(new Map())
+
+  useEffect(() => {
+    getBrands().then((data: {id: number, name: string}[]) => setBrandMap(new Map(data.map(b => [b.id, b.name]))))
+  }, [])
+  
+  const uniqueBrandIds = useMemo(
+    () => [...new Set(vehicles.map(v => v.brand_id))],
+    [vehicles]
+  )
+
+  useEffect(() => {
+    if(uniqueBrandIds.length === 0) return
+    Promise.all(uniqueBrandIds.map(id => getModels(id)))
+      .then(results => {
+
+        const all = results.flat()
+        setModelMap(new Map(all.map(m => [m.id, m.name])))
+      })
+  }, [uniqueBrandIds])
 
   const totalItems = vehicles.length
   const pageSizeNum = Number(pageSize)
@@ -90,7 +112,7 @@ export function AllVehiclesTable({vehicles, onAction, expandedId, onToggleExpand
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="w-[80px] font-semibold text-muted-foreground">ID</TableHead>
+            <TableHead className="w-20 font-semibold text-muted-foreground">ID</TableHead>
             <TableHead className="font-semibold text-muted-foreground">Type</TableHead>
             <TableHead className="font-semibold text-muted-foreground">Brand</TableHead>
             <TableHead className="font-semibold text-muted-foreground">Model</TableHead>
@@ -117,8 +139,8 @@ export function AllVehiclesTable({vehicles, onAction, expandedId, onToggleExpand
                     <span className="font-medium">{vehicle.type}</span>
                   </div>
                 </TableCell>
-                <TableCell className="font-medium">{vehicle.brand}</TableCell>
-                <TableCell className="text-muted-foreground">{vehicle.model}</TableCell>
+                <TableCell className="font-medium">{brandMap.get(vehicle.brand_id) ?? vehicle.brand_id}</TableCell>
+                <TableCell className="text-muted-foreground">{modelMap.get(vehicle.model_id) ?? vehicle.brand_id}</TableCell>
                 <TableCell>
                   <span className="rounded-md bg-muted px-2 py-1 font-mono text-xs tracking-wider">
                     {vehicle.reg_number}
@@ -172,7 +194,7 @@ export function AllVehiclesTable({vehicles, onAction, expandedId, onToggleExpand
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>Rows per page</span>
           <Select value={pageSize} onValueChange={handlePageSizeChange}>
-            <SelectTrigger size="sm" className="w-[70px]">
+            <SelectTrigger size="sm" className="w-17.5">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

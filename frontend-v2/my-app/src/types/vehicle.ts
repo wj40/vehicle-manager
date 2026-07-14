@@ -1,8 +1,8 @@
 export interface Vehicle {
     id: number
     type: "car" | "truck" | "motorcycle" | "bus"
-    brand: string
-    model: string
+    brand_id: number
+    model_id: number
     reg_number: string
     vin_number: string
     productionYear: number

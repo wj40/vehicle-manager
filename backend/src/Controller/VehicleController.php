@@ -30,13 +30,23 @@ final class VehicleController
         return $vehicle->toArray();
     }
 
+    // GET /api/brands
+    public function brands(): array{
+        return $this->vehicleRepository->findAllBrands();
+    }
+
+    // GET /api/models/{brandId}
+    public function models(int $brandId): array{
+        return $this->vehicleRepository->findModelsByBrand($brandId);
+    }
+
     // POST /api/vehicle
     public function store(array $data): array
     {
         $this->vehicleRepository->save(
             $data['type'] ?? '',
-            $data['brand'] ?? '',
-            $data['model'] ?? '',
+            $data['brand_id'] ?? 0,
+            $data['model_id'] ?? 0,
             $data['reg_number'] ?? '',
             $data['vin_number'] ?? '',
             (int)($data['productionYear'] ?? 0),

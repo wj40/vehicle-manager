@@ -149,7 +149,7 @@ export function RegisterForm({ formData, onChange, onSubmit }: Props) {
       </FieldSet>
 
       <div className="flex justify-end @5xl/main:col-span-3">
-        <Button type="submit" variant="default" size="lg" className="w-[150px]">
+        <Button type="submit" variant="default" size="lg" className="w-37.5">
           <Save />
           Submit
         </Button>

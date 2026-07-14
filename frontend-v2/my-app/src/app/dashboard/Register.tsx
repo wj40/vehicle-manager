@@ -30,8 +30,8 @@ export default function Register() {
 
     register({
       type: formData.type,
-      brand: formData.brand,
-      model: formData.model,
+      brandId: formData.brand,
+      modelId: formData.model,
       reg_number: formData.regNumber,
       vin_number: formData.vinNumber,
       productionYear: formData.productionYear,

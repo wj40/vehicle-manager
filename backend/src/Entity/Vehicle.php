@@ -3,14 +3,13 @@ namespace Wjagusiak\VehicleManager\Entity;
 
 use Wjagusiak\VehicleManager\Enum\VehicleType;
 use Wjagusiak\VehicleManager\Interface\Displayable;
-use Wjagusiak\VehicleManager\Interface\Serviceable;
 use Wjagusiak\VehicleManager\Repository\VehicleRepository;
 
-class Vehicle implements Displayable, Serviceable{
+class Vehicle implements Displayable{
     protected VehicleType $vehicleType;
     protected ?int $id;
-    protected string $brand;
-    protected string $model;
+    protected int $brandId;
+    protected int $modelId;
     protected string $reg_number;
     protected string $vin_number;
     protected int $productionYear;
@@ -32,20 +31,20 @@ class Vehicle implements Displayable, Serviceable{
         $this->vehicleType = $vehicleType;
     }
 
-    public function getBrand(): string {
-        return $this->brand;
+    public function getBrandId(): int {
+        return $this->brandId;
     }
 
-    public function setBrand(string $brand): void{
-        $this->brand = $brand;
+    public function setBrandId(int $brandId): void{
+        $this->brandId = $brandId;
     }
 
-    public function getModel() {
-        return $this->model;
+    public function getModelId(): int {
+        return $this->modelId;
     }
 
-    public function setModel(string $model): void{
-        $this->model = $model;
+    public function setModelId(int $modelId): void{
+        $this->modelId = $modelId;
     }
 
     public function getRegNumber(){
@@ -92,8 +91,8 @@ class Vehicle implements Displayable, Serviceable{
         return [
             "id" => $this->id,
             "type" => $this->vehicleType->value,
-            "brand" => $this->brand,
-            "model" => $this->model,
+            "brand_id" => $this->brandId,
+            "model_id" => $this->modelId,
             "reg_number" => $this->reg_number,
             "vin_number" => $this->vin_number,
             "productionYear" => $this->productionYear,
@@ -104,8 +103,8 @@ class Vehicle implements Displayable, Serviceable{
     public function display(): string{
         return "Id: {$this->id}\n<br>
                 Type: {$this->getVehicleType()->value}\n<br>
-                Brand: {$this->brand}\n<br>
-                Model: {$this->model}\n<br>
+                Brand: {$this->brandId}\n<br>
+                Model: {$this->modelId}\n<br>
                 Registration number: {$this->reg_number}\n<br>
                 Vin number: {$this->vin_number}\n<br>
                 Production Year: {$this->productionYear}\n<br>

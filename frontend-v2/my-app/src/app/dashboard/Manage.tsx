@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { SiteHeader } from "@/components/site-header"
 import {
   SidebarInset,
@@ -12,15 +12,34 @@ import SearchVehicleForm from "@/components/search-vehicle-form"
 import { type Vehicle } from "@/types/vehicle"
 import { findAll } from "@/lib/api"
 import { VehicleRegisterPreview, type VehicleFormData } from "@/components/vehicle-register-preview"
-import { manage, deleteVehicle } from "@/lib/api"
+import { manage, deleteVehicle, getBrands, getModels } from "@/lib/api"
 
 export default function Manage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleFormData | null>(null)
   const [clearCounter, setClearCounter] = useState(0)
+  const [brandMap, setBrandMap] = useState<Map<number, string>>(new Map())
+  const [modelMap, setModelMap] = useState<Map<number, string>>(new Map())
 
-
+  useEffect(() => {
+      getBrands().then((data: {id: number, name: string}[]) => setBrandMap(new Map(data.map(b => [b.id, b.name]))))
+    }, [])
+    
+    const uniqueBrandIds = useMemo(
+      () => [...new Set(vehicles.map(v => v.brand_id))],
+      [vehicles]
+    )
+  
+    useEffect(() => {
+      if(uniqueBrandIds.length === 0) return
+      Promise.all(uniqueBrandIds.map(id => getModels(id)))
+        .then(results => {
+  
+          const all = results.flat()
+          setModelMap(new Map(all.map(m => [m.id, m.name])))
+        })
+    }, [uniqueBrandIds])
 
     useEffect(() => {
       findAll().then((data) => {
@@ -33,8 +52,8 @@ export default function Manage() {
       setSelectedVehicle(null)
       setSelectedVehicle({
       type: vehicle.type,
-      brand: vehicle.brand,
-      model: vehicle.model,
+      brand: brandMap.get(vehicle.brand_id) ?? String(vehicle.brand_id),
+      model: modelMap.get(vehicle.model_id) ?? String(vehicle.model_id),
       regNumber: vehicle.reg_number,
       vinNumber: vehicle.vin_number,
       productionYear: vehicle.productionYear.toString(),

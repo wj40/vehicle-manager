@@ -1,5 +1,5 @@
 const API_URL = "http://localhost/vehicle-manager/backend/Public/index.php?route=api/vehicle";
-
+const API_URL_BM = "http://localhost/vehicle-manager/backend/Public/index.php?route=api";
 
 export async function findAll(){
   const response = await fetch(API_URL)
@@ -39,6 +39,21 @@ export async function deleteVehicle(id: number){
 
 export async function history(id: number, action: string){
     const response = await fetch(`${API_URL}/${id}/${action}`)
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error ?? "Blad")
+    return data
+}
+
+export async function getBrands(){
+    const response = await fetch(`${API_URL_BM}/brands`)
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error ?? "Blad")
+    return data
+}
+
+export async function getModels(brandId: number){
+    const API = `${API_URL_BM}/models/${brandId}`
+    const response = await fetch (API)
     const data = await response.json()
     if (!response.ok) throw new Error(data.error ?? "Blad")
     return data
