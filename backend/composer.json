@@ -1,0 +1,9 @@
+{
+    "name": "wjagusiak/vehicle-manager",
+    "autoload": {
+        "psr-4": {
+            "Wjagusiak\\VehicleManager\\": "src/"
+        }
+    },
+    "require": {}
+}
