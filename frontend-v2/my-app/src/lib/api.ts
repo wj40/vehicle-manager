@@ -1,97 +1,85 @@
+function getToken(): string | null {
+  return localStorage.getItem("token")
+}
+
+async function apiFetch(url: string, options: RequestInit = {}): Promise<any> {
+  const token = getToken()
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> ?? {}),
+  }
+  if (token) headers["Authorization"] = `Bearer ${token}`
+
+  const response = await fetch(url, { ...options, headers })
+  if (response.status === 401) {
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    window.location.href = "/login"
+    throw new Error("Session expired")
+  }
+  const data = await response.json()
+  if (!response.ok) throw new Error(data.error ?? "Error")
+  return data
+}
+
 const API_URL = "http://localhost/vehicle-manager/backend/Public/index.php?route=api/vehicle";
 const API_URL_BM = "http://localhost/vehicle-manager/backend/Public/index.php?route=api";
 
 export async function findAll(){
-  const response = await fetch(API_URL)
-  const data = await response.json()
-  if (!response.ok) throw new Error(data.error ?? "Blad")
-  return data
+  return apiFetch(API_URL)
 }
 
 export async function findById(id: number){
-    const API = `${API_URL}/${id}`
-    const response = await fetch (API)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.error ?? "Blad")
-    return data
+    return apiFetch(`${API_URL}/${id}`)
 }
 
 export async function register(formData: object){
-    const response = await fetch(API_URL, {method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData)})
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.error ?? "Blad")
-    return data
+    return apiFetch(API_URL, {method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData)})
 }
 
 export async function manage(id: number, action: string){
-    const response = await fetch(`${API_URL}/${id}/${action}`, {method: 'POST'})
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.error ?? "Blad")
-    return data
+    return apiFetch(`${API_URL}/${id}/${action}`, {method: 'POST'})
 }
 
 export async function updateVehicle(id: number, data: object){
-    const response = await fetch(`${API_URL}/${id}/edit`, {method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
-    const result = await response.json()
-    if (!response.ok) throw new Error(result.error ?? "Blad")
-    return result
+    return apiFetch(`${API_URL}/${id}/edit`, {method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
 }
 
 export async function deleteVehicle(id: number){
-    const response = await fetch(`${API_URL}/${id}`, {method: 'DELETE'})
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.error ?? "Blad")
-    return data
+    return apiFetch(`${API_URL}/${id}`, {method: 'DELETE'})
 }
 
 export async function history(id: number, action: string){
-    const response = await fetch(`${API_URL}/${id}/${action}`)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.error ?? "Blad")
-    return data
+    return apiFetch(`${API_URL}/${id}/${action}`)
 }
 
 export async function getBrands(){
-    const response = await fetch(`${API_URL_BM}/brands`)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.error ?? "Blad")
-    return data
+    return apiFetch(`${API_URL_BM}/brands`)
 }
 
 export async function getModels(brandId: number){
-    const API = `${API_URL_BM}/models/${brandId}`
-    const response = await fetch (API)
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.error ?? "Blad")
-    return data
+    return apiFetch(`${API_URL_BM}/models/${brandId}`)
 }
 
-// POST /api/brands
 export async function addBrand(name: string){
-    
+    return apiFetch(`${API_URL_BM}/brands`, {method: 'POST', headers: { "Content-Type": "application/json"}, body: JSON.stringify({name: name})})
 }
 
-// POST /api/brands/{id}
 export async function updateBrand(id: number, name: string){
-
+    return apiFetch(`${API_URL_BM}/brands/${id}`, {method: 'POST', headers: { "Content-Type": "application/json"}, body: JSON.stringify({name: name})})
 }
 
-// DELETE /api/brands/{id}
 export async function deleteBrand(id: number){
+    return apiFetch(`${API_URL_BM}/brands/${id}`, {method: 'DELETE'})
+}
 
-} 
-
-// POST /api/models
 export async function addModel(brandId: number, name: string){
-
+    return apiFetch(`${API_URL_BM}/models`, {method: 'POST', headers: { "Content-Type": "application/json"}, body: JSON.stringify({brand_id: brandId, name: name})})
 }
 
-// POST /api/models/{id}
 export async function updateModel(id: number, name: string){
-
+    return apiFetch(`${API_URL_BM}/models/${id}`, {method: 'POST', headers: { "Content-Type": "application/json"}, body: JSON.stringify({name: name})})
 }
 
-// DELETE /api/models/{id}
 export async function deleteModel(id: number){
-
+    return apiFetch(`${API_URL_BM}/models/${id}`, {method: 'DELETE'})
 }

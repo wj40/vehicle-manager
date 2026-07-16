@@ -5,21 +5,18 @@ import {
   SidebarInset,
 
 } from "@/components/ui/sidebar"
-import { toast } from "sonner"
 import SearchVehicleForm from "@/components/search-vehicle-form"
 import { findAll } from "@/lib/api"
 import { type Vehicle } from "@/types/vehicle"
-import { manage, deleteVehicle } from "@/lib/api"
 
 
 export default function Search() {
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([])
   const [clearCounter, setClearCounter] = useState(0)
-  const [expandedId, setExpandedId] = useState<number | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [searchText, setSearchText] = useState("")
 
   useEffect(() => {
     findAll().then((data) => {
@@ -30,51 +27,14 @@ export default function Search() {
 
   function handleSelect(vehicle: Vehicle) {
     setFilteredVehicles([vehicle])
-    setSelectedId(vehicle.id)
   }
 
   function handleClear() {
   setFilteredVehicles(vehicles)
+  setSearchText("")
   setClearCounter(c => c + 1)
   }
 
-  function handleToogleExpand(vehicleId: number | null){
-    setExpandedId(vehicleId)
-  }
-
-  function handleManageButton(vehicleId: number, actionType: string){
-        if(actionType == "delete"){
-            deleteVehicle(vehicleId)
-            .then((data) => toast.success(data.message))
-            .then(() => setRefreshKey(k => k + 1))
-            .catch((error) => toast.error(error.message))
-        }else{
-            let actionMessage = ""
-            switch(actionType){
-              case "rent": 
-              actionMessage = "Vehicle rented succesfully"
-              break;
-
-              case "return": 
-              actionMessage = "Vehicle returned succesfully"
-              break;
-
-              case "service": 
-              actionMessage = "Vehicle sent to service succesfully"
-              break;
-
-              case "finish-service": 
-              actionMessage = "Vehicle returned from service succesfully"
-              break;
-
-              default: actionMessage = "Error"
-            }
-            manage(vehicleId, actionType)
-            .then(() => toast.success(actionMessage))
-            .then(() => setRefreshKey(k => k + 1))
-            .catch((error) => toast.error(error.message))
-      }
-    }
   return (
       <SidebarInset>
         <SiteHeader 
@@ -87,13 +47,13 @@ export default function Search() {
               vehicles={vehicles}
               onSelect={handleSelect}
               onClear={handleClear}
+              searchText={searchText}
+              onSearchTextChange={setSearchText}
               key={clearCounter}
               />
               <AllVehiclesTable 
               vehicles={filteredVehicles}
-              expandedId={expandedId}
-              onToggleExpand={handleToogleExpand}
-              onAction={handleManageButton}
+              searchText={searchText}
               />
             </div>
           </div>

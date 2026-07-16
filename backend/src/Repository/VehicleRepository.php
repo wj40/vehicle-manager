@@ -19,6 +19,14 @@ class VehicleRepository{
         $this->pdo = $db->connect();
     }
 
+    // logowanie
+    public function findUserByLogin(string $login): ?array{
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE login = ?");
+        $stmt->execute([$login]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     // zwraca wszystko jako tablice
     public function findAllAsArray(): array{
         $sql = "SELECT vehicles.*
@@ -121,6 +129,14 @@ class VehicleRepository{
     
     public function updateAllFields(int $id, string $type, int $brandId, int $modelId, string $regNumber, string $vinNumber, int $productionYear): void
     {
+        $reg = $this->pdo->prepare("SELECT id FROM vehicles WHERE reg_number=? AND id!=?");
+        $reg->execute([$regNumber, $id]);
+        if($reg->fetch()) throw new VehicleAlreadyExistException("Vehicle");
+
+        $vin = $this->pdo->prepare("SELECT id FROM vehicles WHERE vin_number=? AND id!=?");
+        $vin->execute([$vinNumber, $id]);
+        if($vin->fetch()) throw new VehicleAlreadyExistException("Vehicle");
+
         $types = ['car','truck','motorcycle','bus'];
         if (!in_array($type, $types)) throw new VehicleWrongType;
 

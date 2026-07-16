@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   Table,
   TableBody,
@@ -49,7 +50,8 @@ export function RecentVehiclesTable({vehicles}: RecentVehiclesTableProps) {
       })
   }, [uniqueBrandIds])
 
-    
+  const navigate = useNavigate()
+  
   return (
     <div className="rounded-xl border bg-card">
       <div className="border-b px-4 py-3">
@@ -59,7 +61,7 @@ export function RecentVehiclesTable({vehicles}: RecentVehiclesTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">ID</TableHead>
+            <TableHead className="w-25">ID</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Brand</TableHead>
             <TableHead>Model</TableHead>
@@ -69,7 +71,11 @@ export function RecentVehiclesTable({vehicles}: RecentVehiclesTableProps) {
         </TableHeader>
         <TableBody>
           {vehicles.map((vehicle) => (
-            <TableRow key={vehicle.id}>
+            <TableRow 
+            key={vehicle.id}
+            onClick={() => navigate(`/vehicles/${vehicle.id}`)}
+            className="cursor-pointer"
+            >
               <TableCell className="font-medium">{vehicle.id}</TableCell>
               <TableCell>{vehicle.type}</TableCell>
               <TableCell>{brandMap.get(vehicle.brand_id) ?? vehicle.brand_id}</TableCell>

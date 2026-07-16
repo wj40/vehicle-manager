@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Wjagusiak\VehicleManager\Controller\VehicleController;
@@ -11,6 +12,9 @@ use Wjagusiak\VehicleManager\Exception\VehicleInvalidReferenceException;
 use Wjagusiak\VehicleManager\Exception\VehicleNotFoundException;
 use Wjagusiak\VehicleManager\Exception\VehicleWrongStatus;
 use Wjagusiak\VehicleManager\Exception\VehicleWrongType;
+use Firebase\JWT;
+use Firebase\JWT\Key;
+use Wjagusiak\VehicleManager\Repository\VehicleRepository;
 
 $route = $_GET['route'] ?? '';
 
@@ -20,7 +24,7 @@ if (str_starts_with($route, 'api/')) {
     // CORS - frontend (Vite, localhost:5173) i backend (XAMPP) to inny origin dla przegladarki
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
     header('Content-Type: application/json');
 
     // przegladarka przed "prawdziwym" requestem wysyla OPTIONS (preflight) - odpowiadamy pusto i konczymy
@@ -37,12 +41,65 @@ if (str_starts_with($route, 'api/')) {
     // segments[0] = "api", segments[1] = "vehicle", segments[2] = id (opcjonalnie), segments[3] = akcja (opcjonalnie)
     $id = isset($segments[2]) ? (int)$segments[2] : null;
     $brandId = isset($segments[2]) ? (int)$segments[2] : null;
-
-    
     $action = $segments[3] ?? null;
 
+    // --------------------------------------------------------------
+    $publicRoutes = ['api/login'];
+
+    if(!in_array($route, $publicRoutes)){
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION']
+            ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
+            ?? '';
+        
+        if(!str_starts_with($authHeader, 'Bearer ')){
+            http_response_code(401);
+            echo json_encode(['error' => 'Missing or invalid token']);
+            exit;
+        }
+
+        $token = substr($authHeader, 7);
+
+        try{
+            $decoded = Firebase\JWT\JWT::decode($token, new Firebase\JWT\Key(JWT_SECRET, 'HS256'));
+            $authenticatedUserId = $decoded->userId;
+        }catch(\Exception $e){
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid or expired token']);
+            exit;
+        }
+    }
+    // --------------------------------------------------------------
+
     $controller = new VehicleController();
+    $repository = new VehicleRepository();
     $body = json_decode(file_get_contents('php://input'), true) ?? [];
+
+    // --------------------------------------------------------------
+
+    if($method === 'POST' && $route === 'api/login'){
+        $inputLogin = $body['login'] ?? '';
+        $inputPassword = $body['password'] ?? '';
+
+        $user = $repository->findUserByLogin($inputLogin);
+
+        if(!$user || !password_verify($inputPassword, $user['password_hash'])){
+            http_response_code(401);
+            echo json_encode(['error' => "Invalid credentials"]);
+            exit;
+        }
+
+        $payload = [
+            'userId' => $user['id'],
+            'login' => $user['login'],
+            'exp' => time() + JWT_EXPIRY,
+        ];
+
+        $token = Firebase\JWT\JWT::encode($payload, JWT_SECRET, 'HS256');
+        echo json_encode(['token' => $token, 'user' => ['id' => $user['id'], 'login' => $user['login']]]);
+        exit;
+    }
+
+    // --------------------------------------------------------------
 
     try{
         if ($method === 'GET' && $segments[1] === 'brands') {
@@ -57,7 +114,7 @@ if (str_starts_with($route, 'api/')) {
         } elseif ($method === 'GET' && $id !== null && $action === null) {
             $result = $controller->show($id);
             http_response_code(200);
-        } elseif ($method === 'POST' && $id === null) {
+        } elseif ($method === 'POST' && $segments[1] === 'vehicle' && $id === null) {
             $result = $controller->store($body);
             http_response_code(201);
         } elseif ($method === 'POST' && $action === 'rent') {
@@ -75,7 +132,7 @@ if (str_starts_with($route, 'api/')) {
         } elseif ($method === 'POST' && $action === 'edit') {
             $result = $controller->edit($id, $body);
             http_response_code(200);
-        } elseif ($method === 'DELETE' && $id !== null) {
+        } elseif ($method === 'DELETE' && $segments[1] === 'vehicle' && $id !== null) {
             $result = $controller->destroy($id);
             http_response_code(200);
         } elseif ($method === 'GET' && $action ==='history'){

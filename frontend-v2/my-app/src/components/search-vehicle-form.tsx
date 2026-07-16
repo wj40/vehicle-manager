@@ -9,15 +9,18 @@ import {
 import { SearchIcon, X } from "lucide-react"
 import { ComboboxSearch } from "./combo-box-search"
 import { Button } from "./ui/button"
+import { Input } from "./ui/input"
 import { type Vehicle } from "@/types/vehicle"
 
 type Props = {
   vehicles: Vehicle[]
   onSelect: (vehicle: Vehicle) => void
   onClear: () => void
+  searchText: string
+  onSearchTextChange: (text: string) => void
 }
 
-function SearchVehicleForm({vehicles, onSelect, onClear}: Props) {
+function SearchVehicleForm({vehicles, onSelect, onClear, searchText, onSearchTextChange}: Props) {
 
 
   return (
@@ -29,7 +32,7 @@ function SearchVehicleForm({vehicles, onSelect, onClear}: Props) {
         <div>
           <h2 className="text-sm font-semibold leading-none">Search vehicles</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Find a vehicle by brand, model, registration number or VIN
+            Find a vehicle by brand, model, registration or VIN
           </p>
         </div>
       </div>
@@ -38,8 +41,8 @@ function SearchVehicleForm({vehicles, onSelect, onClear}: Props) {
         <FieldSet>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="vehicle-search" className="sr-only">
-                Search for vehicles
+              <FieldLabel htmlFor="vehicle-search" className="">
+                Search for single vehicle
               </FieldLabel>
               <ComboboxSearch 
               vehicles={vehicles}
@@ -47,7 +50,18 @@ function SearchVehicleForm({vehicles, onSelect, onClear}: Props) {
               />
             </Field>
           </FieldGroup>
-
+            <Field>
+              <FieldLabel htmlFor="live-filter">
+                Search for vehicles
+              </FieldLabel>
+              <Input
+              id="live-filter"
+              placeholder="Search for vehicles by brand, model, registration or VIN"
+              value={searchText}
+              onChange={(e) => onSearchTextChange(e.target.value)}
+              className="h-11 text-[15px]"
+              />
+            </Field>
           <div className="mt-4 flex flex-col-reverse justify-end gap-2 sm:flex-row">
             <Button variant="outline" size="lg" onClick={onClear} aria-label="Clear filters">
               <X />

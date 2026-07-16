@@ -70,7 +70,7 @@ export function VehicleHistoryTable({history}: VehicleHistoryTableProps) {
             <TableBody>
               {paginatedVehicles.map((history) => {
                 return (
-                  <TableRow key={history.action} className="cursor-pointer">
+                  <TableRow key={history.id} className="cursor-pointer">
                     <TableCell className="font-medium">
                       {history.action}
                     </TableCell>

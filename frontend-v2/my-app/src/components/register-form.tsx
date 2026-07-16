@@ -114,6 +114,7 @@ export function RegisterForm({ formData, onChange, onSubmit }: Props) {
               id="productionYear"
               type="number"
               placeholder="2026"
+              max={new Date().getFullYear()}
               value={formData.productionYear}
               onChange={(e) => onChange("productionYear", e.target.value)}
             />

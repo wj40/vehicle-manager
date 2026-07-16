@@ -10,8 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, ListIcon, ClipboardPenLine, Brain, Car } from "lucide-react"
-
+import { LayoutDashboardIcon, ListIcon, ClipboardPenLine, Brain, Car, Tags, LogOut } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 const data = {
   navMain: [
@@ -40,10 +40,10 @@ const data = {
       ),
     },
     {
-      title: "Vehicle history",
-      url: "/manage",
+      title: "Brands & models",
+      url: "/brands",
       icon: (
-        <Brain
+        <Tags
         />
       ),
     },
@@ -109,6 +109,7 @@ const data = {
 }
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
+  const { logout } = useAuth()
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -127,6 +128,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
+        <div className="mt-auto border-t p-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => {logout(); navigate("/login")}}>
+                <LogOut className="size-4" />
+                <span>Sign Out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
       </SidebarContent>
     </Sidebar>
   )
