@@ -1,0 +1,32 @@
+# Tutaj nadpisanie dla deva
+
+services:
+  backend:
+    environment:
+      - APP_SECRET=dcc036de74c9b2dcbebd9b97bdcb1cca
+      - DATABASE_URL=mysql://root:@db:3306/vehicle_manager?serverVersion=11
+      - FRONTEND_URL=http://localhost:8888
+    build:
+      target: dev
+    volumes:
+      - ./backend-symfony/src:/var/www/html/src
+      - ./backend-symfony/config:/var/www/html/config
+      - ./backend-symfony/public:/var/www/html/public
+      # - ./backend-symfony/.env:/var/www/html/.env
+    ports:
+      - 9000:80
+  frontend:
+    build:
+      target: dev
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend/my-app:/home/node/app
+      - /home/node/app/node_modules
+    ports:
+      - '8888:8888'
+  db:
+    ports:
+      - 3306:3306
+    volumes:
+      - ./database:/var/lib/mysql

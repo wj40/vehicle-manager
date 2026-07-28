@@ -1,0 +1,60 @@
+#  Tutaj częsci wspólne dla dev + prod a nadpisanie dla konkretnych środowisk przez pliki x.prod, .ovveride - Środowisko kontrolowane nadal przez .env. 
+# docker compose -f compose.yaml -f compose.prod.yaml build / up - Produkcja
+# docker compose build / up - DEV
+
+services:
+  backend:
+    env_file:
+      - ./.env
+    image: backend:1.0
+    container_name: backend
+    environment:
+      - DEFAULT_URI=http://localhost
+    secrets:
+      - JWT_SECRET
+      - CORS_ALLOW_ORIGIN
+    build:
+      context: ./backend-symfony
+    # volumes:
+    #   - ./backend-symfony/src:/var/www/html/src
+    #   - ./backend-symfony/config:/var/www/html/config
+    #   - ./backend-symfony/public:/var/www/html/public
+    #   - ./backend-symfony/.env:/var/www/html/.env
+    # ports:
+    #   - 9000:80
+    depends_on:
+      - db
+    restart: always
+  frontend:
+    image: frontend:1.0
+    container_name: frontend
+    build:
+      context: ./frontend/my-app
+    # environment:
+    #   - NODE_ENV=development
+    # volumes:
+    #   - ./frontend/my-app:/home/node/app
+    #   - /home/node/app/node_modules
+    # ports:
+    #   - '8888:8888'
+    # depends_on:
+    #   - backend
+    restart: always
+  db:
+    image: mariadb:11
+    container_name: database
+    restart: always
+    # ports:
+    #   - 3306:3306
+    environment:
+      MARIADB_DATABASE: vehicle_manager
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 1
+    # volumes:
+    #   - ./database:/var/lib/mysql
+secrets:
+  JWT_SECRET:
+    file: ./backend-symfony/secrets/jwt_secret.txt
+  CORS_ALLOW_ORIGIN:
+    file: ./backend-symfony/secrets/cors_allow_origin.txt
+  APP_SECRET:
+    file: ./backend-symfony/secrets/app_secret.txt

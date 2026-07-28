@@ -1,0 +1,24 @@
+# Tutaj nadpisanie na produkcję
+
+services:
+  backend:
+    build:
+      target: prod
+    secrets:
+      - DATABASE_URL
+      - APP_SECRET
+    environment:
+      - APP_ENV=prod
+      - FRONTEND_URL=http://localhost:80
+      # - DATABASE_URL=mysql://root:trvEZ0UiUnlCpIX2FDnJhbeW@cloud.layerbase.dev:29769/vehicle_manager?ssl-mode=REQUIRED
+  frontend:
+    build:
+      target: prod
+    environment:
+      - APP_ENV=prod
+      - NODE_ENV=production
+    ports:
+      - '80:80'
+secrets:
+  DATABASE_URL:
+    file: ./backend-symfony/secrets/database_url.txt
