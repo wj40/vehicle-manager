@@ -6,6 +6,7 @@ use App\Entity\User;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
+
 #[UniqueEntity(
     entityClass: User::class,
     fields: ['login'],
@@ -29,6 +30,6 @@ class UserInput{
 
         #[Assert\NotBlank]
         #[Assert\Length(min: 4, minMessage: 'Password is too short')]
-        public string $password
+        public string $password,
     ) {}
 }

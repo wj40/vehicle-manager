@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     message: 'Vehicle with this registration number already exists',
     errorPath: 'regNumber',
     identifierFieldNames: ['id'],
-    groups: ['xyz'])]
+    )]
 #[UniqueEntity(
     entityClass: Vehicle::class,
     fields: ['vinNumber'],

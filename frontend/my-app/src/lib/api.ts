@@ -28,11 +28,19 @@ const API_URL = "/api/vehicle";
 const API_URL_BM = "/api";
 
 export async function findAll(){
-  return apiFetch(API_URL)
+    return apiFetch(API_URL)
 }
 
 export async function findById(id: number){
-    return apiFetch(`${API_URL}/${id}`)
+    return apiFetch(`${API_URL}/${id}`, {method: 'GET'})
+}
+
+export async function findAllUsers(){
+    return apiFetch(`${API_URL_BM}/users`, {method: 'GET'})
+}
+
+export async function findUserById(id: number){
+    return apiFetch(`${API_URL_BM}/user/${id}`)
 }
 
 export async function register(formData: object){
@@ -49,6 +57,10 @@ export async function updateVehicle(id: number, data: object){
 
 export async function deleteVehicle(id: number){
     return apiFetch(`${API_URL}/${id}`, {method: 'DELETE'})
+}
+
+export async function deleteUser(id: number){
+    return apiFetch(`${API_URL_BM}/user/${id}`, { method: 'DELETE' })
 }
 
 export async function history(id: number, action: string){
@@ -85,4 +97,12 @@ export async function updateModel(id: number, name: string){
 
 export async function deleteModel(id: number){
     return apiFetch(`${API_URL_BM}/models/${id}`, {method: 'DELETE'})
+}
+
+export async function changePassword(id: number, password: string){
+    return apiFetch(`${API_URL_BM}/change/${id}`, { method: 'POST' , headers: { "Content-Type": "application/json"}, body: JSON.stringify({password: password})})
+}
+
+export async function editUser(id: number, data: object){
+    return apiFetch(`${API_URL_BM}/edituser/${id}`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
 }

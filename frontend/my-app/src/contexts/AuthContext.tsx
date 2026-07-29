@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
-type User = { id: number; login: string, email: string, }
+type User = { id: number; login: string; email: string; role: string; }
 type AuthContextType = {
   user: User | null
   token: string | null
@@ -39,10 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!res.ok) throw new Error(data.error ?? "Login failed")
 
     localStorage.setItem("token", data.token)
-    localStorage.setItem("user", JSON.stringify({ id: 0, login: data.login, email: data.email }))
+    localStorage.setItem("user", JSON.stringify({ id: 0, login: data.login, email: data.email, role: data.role }))
     setToken(data.token)
     // setUser(data.user)
-    setUser({ id: 0, login: data.login, email: data.email })
+    setUser({ id: 0, login: data.login, email: data.email, role: data.role?.[0] ?? data.role })
   }
 
   function logout() {

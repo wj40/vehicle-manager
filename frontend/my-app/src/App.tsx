@@ -10,13 +10,16 @@ import VehicleDetail from "./app/dashboard/VehicleDetail";
 import RegisterUser from "./app/dashboard/RegisterUser";
 import SendEmail from "./app/dashboard/SendEmail";
 import ResetPassword from "./app/dashboard/ResetPassword";
+import Users from "./app/dashboard/Users";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./contexts/AuthContext";
 import { Navigate } from "react-router-dom"
+import UserDetail from "./app/dashboard/UserDetail";
 
 function AppContent() {
-  const { token, loading } = useAuth()
+  const { token, loading, user } = useAuth()
+  const isAdmin = user?.role === "ROLE_ADMIN"
   const isLoggedIn = !!token
 
   if(loading) return null
@@ -48,6 +51,8 @@ function AppContent() {
         <Route path="/search" element={<Search />} />
         <Route path="/vehicles/:id" element={<VehicleDetail />} />
         <Route path="/brands" element={<Brands />} />
+        <Route path="/users" element={isAdmin ? <Users /> : <Navigate to="/" replace />} />
+        <Route path="/user/:id" element={isAdmin ? <UserDetail /> : <Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </SidebarProvider>

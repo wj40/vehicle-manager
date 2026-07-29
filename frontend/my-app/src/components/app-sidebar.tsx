@@ -11,16 +11,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, ListIcon, ClipboardPenLine, Car, Tags, LogOut } from "lucide-react"
+import { LayoutDashboardIcon, ListIcon, ClipboardPenLine, Car, Tags, LogOut, UsersIcon } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { NavUser } from "./nav-user"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -117,6 +112,10 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
   const { logout, user } = useAuth()
+  const isAdmin = user?.role === "ROLE_ADMIN"
+  const navItems = isAdmin
+    ? [...data.navMain, { title: "Users", url: "/users", icon: <UsersIcon /> }]
+    : data.navMain
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -134,7 +133,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        {/* <NavMain items={data.navMain} /> */}
+        <NavMain items={navItems} />
         <div className="mt-auto border-t p-2">
           <SidebarMenu>
             <SidebarMenuItem>

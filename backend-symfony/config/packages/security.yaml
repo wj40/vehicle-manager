@@ -31,6 +31,10 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
+        - { path: ^/api/users, roles: ROLE_ADMIN }
+        - { path: ^/api/user, roles: ROLE_ADMIN }
+        - { path: ^/api/change, roles: ROLE_ADMIN }
+        - { path: ^/api/edituser, roles: ROLE_ADMIN }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/sendemail, roles: PUBLIC_ACCESS }

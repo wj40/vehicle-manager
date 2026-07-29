@@ -9,8 +9,8 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 enum Roles: string{
-    case admin = 'admin';
-    case user = 'user';
+    case ROLE_ADMIN = 'ROLE_ADMIN';
+    case ROLE_USER = 'ROLE_USER';
 }
 
 #[ORM\Table(name: 'users')]
@@ -35,7 +35,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password_hash = null;
 
-    #[ORM\Column(type: 'string', enumType: Roles::class)]
+    #[ORM\Column(enumType: Roles::class)]
     private ?Roles $role = null;
 
     public function getId(): ?int
@@ -83,7 +83,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Override]
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        return [$this->role?->value ?? 'ROLE_USER'];
+    }
+
+    public function setRole(Roles $role): static{
+
+        $this->role = $role;
+        return $this;
     }
 
     /**
@@ -101,16 +107,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRole(): ?string
-    {
-        return $this->role;
-    }
-
-    public function setRole(Roles $role): static{
-
-        $this->role = $role;
-        return $this;
-    }
+    
 
     /**
      * Ensure the session doesn't contain actual password hashes by CRC32C-hashing them, as supported since Symfony 7.3.
