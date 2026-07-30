@@ -7,11 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Override;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-
-enum Roles: string{
-    case admin = 'admin';
-    case user = 'user';
-}
+use App\Enum\UserRole;
 
 #[ORM\Table(name: 'users')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -35,8 +31,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password_hash = null;
 
-    #[ORM\Column(type: 'string', enumType: Roles::class)]
-    private ?Roles $role = null;
+    #[ORM\Column(type: 'json')]
+    private array $roles = [];
 
     public function getId(): ?int
     {
@@ -83,7 +79,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Override]
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        $roles = $this->roles;
+
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
     }
 
     /**
@@ -101,14 +101,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRole(): ?string
-    {
-        return $this->role;
-    }
+    // public function getRole(): ?string
+    // {
+    //     return $this->role;
+    // }
 
-    public function setRole(Roles $role): static{
+    public function setRole(array $role): static{
 
-        $this->role = $role;
+        $this->roles = $role;
         return $this;
     }
 

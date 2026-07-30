@@ -1,0 +1,128 @@
+Symfony Custom Voter
+
+namespace App\Security\Voter;
+
+use App\Entity\User;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+
+class UserManagementVoter extends Voter
+{
+    // Rejestrujemy unikalne nazwy akcji, które potrafi sprawdzić ten voter
+    public const EDIT = 'USER_EDIT';
+    public const DELETE = 'USER_DELETE';
+
+    // KROK 1: Czy to zadanie dla mnie?
+    protected function supports(string $attribute, mixed $subject): bool
+    {
+        // Sprawdź, czy żądana akcja to EDIT lub DELETE, a obiekt to klasa User
+        return in_array($attribute, [self::EDIT, self::DELETE]) 
+            && $subject instanceof User;
+    }
+
+    // KROK 2: Jaka jest decyzja? (Uruchomi się tylko jeśli krok 1 zwrócił true)
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    {
+        // Wyciągamy z systemu osobę, która aktualnie klika na stronie
+        $currentUser = $token->getUser(); 
+        
+        // Jeśli osoba klikająca nie jest zalogowana, natychmiast blokujemy dostęp
+        if (!$currentUser instanceof User) {
+            return false;
+        }
+
+        // Wyciągamy z systemu obiekt (konto użytkownika), na którym chcemy wykonać akcję
+        /** @var User $targetUser */
+        $targetUser = $subject; 
+
+        // Rozdzielamy logikę: zależnie od akcji (EDIT czy DELETE) idziemy do innej metody
+        return match ($attribute) {
+            self::EDIT => $this->canEdit($currentUser, $targetUser),
+            self::DELETE => $this->canDelete($currentUser, $targetUser),
+            default => false,
+        };
+    }
+
+    // SPECJALNE ZASADY DLA EDYCJI
+    private function canEdit(User $currentUser, User $targetUser): bool
+    {
+        // Jeśli klikający to ADMIN -> dajemy dostęp do edycji każdego konta
+        if (in_array('ROLE_ADMIN', $currentUser->getRoles())) {
+            return true;
+        }
+
+        // Jeśli klikający to KIEROWNIK -> również dajemy dostęp do edycji każdego konta
+        if (in_array('ROLE_KIEROWNIK', $currentUser->getRoles())) {
+            return true;
+        }
+
+        // W innym wypadku (zwykły user) -> pozwól tylko, jeśli edytuje samego siebie
+        return $currentUser === $targetUser;
+    }
+
+    // SPECJALNE ZASADY DLA USUWANIA
+    private function canDelete(User $currentUser, User $targetUser): bool
+    {
+        // Jeśli klikający to ADMIN -> pozwól usunąć dowolne konto
+        if (in_array('ROLE_ADMIN', $currentUser->getRoles())) {
+            return true;
+        }
+
+        // Każdy inny (Kierownik i Zwykły user) -> może usunąć TYLKO swoje własne konto
+        // (Kierownik nie przejdzie warunku wyżej, więc wyląduje tutaj i zostanie zablokowany przy obcych kontach)
+        return $currentUser === $targetUser;
+    }
+}
+---------------------------------------------------------------------------------------------------------------------
+namespace App\Controller;
+
+use App\Entity\User;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
+class UserController extends AbstractController
+{
+    /**
+     * Strona zarządzania / edycji profilu
+     * URL wygląda np. tak: /user/5/edit (gdzie 5 to ID użytkownika, którego profil otwieramy)
+     */
+    #[Route('/user/{id}/edit', name: 'user_edit')]
+    public function edit(User $userToEdit): Response
+    {
+        // 1. WYWOŁANIE VOTERA (Akcja: EDYCJA)
+        // Symfony widzi tekst 'USER_EDIT' oraz obiekt $userToEdit.
+        // Przesyła je do naszego Votera. Tam uruchamia się metoda canEdit().
+        // Jeśli Voter zwróci FALSE -> Symfony natychmiast przerywa działanie i wyrzuca błąd 403 (Brak dostępu).
+        $this->denyAccessUnlessGranted('USER_EDIT', $userToEdit);
+
+        // 2. BEZPIECZNA STREFA
+        // Ten kod wykona się TYLKO, jeśli Voter zwrócił TRUE.
+        // Wiemy już na 100%, że zalogowana osoba ma prawo tu być (jest Adminem, Kierownikiem lub edytuje siebie).
+        return $this->render('user/edit.html.twig', [
+            'user' => $userToEdit
+        ]);
+    }
+
+    /**
+     * Akcja usuwania użytkownika z systemu
+     * URL wygląda np. tak: /user/5/delete
+     */
+    #[Route('/user/{id}/delete', name: 'user_delete', methods: ['POST'])]
+    public function delete(User $userToDelete): Response
+    {
+        // 1. WYWOŁANIE VOTERA (Akcja: USUWANIE)
+        // Symfony widzi tekst 'USER_DELETE' oraz obiekt $userToDelete.
+        // Przesyła je do naszego Votera. Tym razem match() przekieruje nas do metody canDelete().
+        // Jeśli klikający to Kierownik i chce usunąć KOGOŚ INNEGO -> canDelete() zwróci FALSE i akcja zostanie zablokowana!
+        $this->denyAccessUnlessGranted('USER_DELETE', $userToDelete);
+
+        // 2. BEZPIECZNA STREFA
+        // Kod do usuwania użytkownika z bazy danych wykona się TYLKO dla Admina lub gdy ktoś usuwa samego siebie.
+        // (Tutaj dopisałbyś kod usuwający z bazy, np. z EntityManager)
+
+        // Po udanym usunięciu przekierowujemy na listę użytkowników
+        return $this->redirectToRoute('user_list');
+    }
+}
+---------------------------------------------------------------------------------------------------------------------
