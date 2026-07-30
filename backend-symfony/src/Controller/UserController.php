@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -74,6 +74,7 @@ class UserController extends AbstractController{
         }
 
     #[Route('/api/edituser/{id}', methods: ['POST'])]
+    #[IsGranted(attribute: UserVoter::EDIT, subject: 'user')]
     public function editUser(
         // #[MapRequestPayload] UserEditInput $input,
         #[MapEntity] User $user,
@@ -82,13 +83,13 @@ class UserController extends AbstractController{
         Request $request,
         EntityManagerInterface $entityManager,
     ): JsonResponse{
-        $this->denyAccessUnlessGranted(UserVoter::EDIT, $user);
         $input = $serializer->deserialize(
             $request->getContent(),
             UserEditInput::class,
             'json'
         );
         $input->id = $user->getId();
+
 
         $errors = $validator->validate($input);
         if($errors->count()){
@@ -98,20 +99,30 @@ class UserController extends AbstractController{
         if(isset($input->login)) $user->setLogin($input->login);
         if(isset($input->email)) $user->setEmail($input->email);
         if(isset($input->role)){
-            switch($input->role){
-                case 'ROLE_ADMIN':
-                    $user->setRole([UserRole::ADMIN->value]);
-                    break;
-                case 'ROLE_MANAGER':
-                    $user->setRole([UserRole::MANAGER->value]);
-                    break;
-                case 'ROLE_USER':
-                    $user->setRole([UserRole::USER->value]);
-                    break;
-                default:
-                    throw new BadRequestHttpException(sprintf('Role "%s" is not a valid role', $input->role));
-                
+            $currentRole = ($user->getRoles())[0] ?? 'ROLE_USER';
+
+            if ($currentRole !== $input->role) {
+                if (!$this->isGranted(UserVoter::EDIT_ROLE, $user)) {
+                    return $this->json(['error' => 'Only administrators can change user roles.'], 403);
+                }
+                switch($input->role){
+                    case 'ROLE_ADMIN':
+                        $user->setRole([UserRole::ADMIN->value]);
+                        break;
+                    case 'ROLE_MANAGER':
+                        $user->setRole([UserRole::MANAGER->value]);
+                        break;
+                    case 'ROLE_USER':
+                        $user->setRole([UserRole::USER->value]);
+                        break;
+                    default:
+                        throw new BadRequestHttpException(sprintf('Role "%s" is not a valid role', $input->role));
+                    
+                } 
             }
+               
+            
+            
         }
 
         $entityManager->flush();

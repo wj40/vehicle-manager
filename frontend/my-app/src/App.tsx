@@ -10,6 +10,8 @@ import VehicleDetail from "./app/dashboard/VehicleDetail";
 import RegisterUser from "./app/dashboard/RegisterUser";
 import SendEmail from "./app/dashboard/SendEmail";
 import ResetPassword from "./app/dashboard/ResetPassword";
+import Users from "./app/dashboard/Users";
+import UserDetail from "./app/dashboard/UserDetail";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./contexts/AuthContext";
@@ -48,6 +50,8 @@ function AppContent() {
         <Route path="/search" element={<Search />} />
         <Route path="/vehicles/:id" element={<VehicleDetail />} />
         <Route path="/brands" element={<Brands />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/user/:id" element={<UserDetail />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </SidebarProvider>

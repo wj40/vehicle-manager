@@ -17,7 +17,7 @@ async function apiFetch(url: string, options: RequestInit = {}): Promise<any> {
     throw new Error("Session expired")
   }
   const data = await response.json()
-  if (!response.ok) throw new Error(data.error ?? "Error")
+  if (!response.ok) throw { status: response.status, message: data.error ?? "Error" }
   return data
 }
 
@@ -85,4 +85,24 @@ export async function updateModel(id: number, name: string){
 
 export async function deleteModel(id: number){
     return apiFetch(`${API_URL_BM}/models/${id}`, {method: 'DELETE'})
+}
+
+export async function findAllUsers(){
+    return apiFetch(`${API_URL_BM}/users`, {method: 'GET'})
+}
+
+export async function findUserById(id: number){
+    return apiFetch(`${API_URL_BM}/user/${id}`)
+}
+
+export async function deleteUser(id: number){
+    return apiFetch(`${API_URL_BM}/user/${id}`, { method: 'DELETE' })
+}
+
+export async function changePassword(id: number, password: string){
+    return apiFetch(`${API_URL_BM}/change/${id}`, { method: 'POST' , headers: { "Content-Type": "application/json"}, body: JSON.stringify({password: password})})
+}
+
+export async function editUser(id: number, data: object){
+    return apiFetch(`${API_URL_BM}/edituser/${id}`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
 }

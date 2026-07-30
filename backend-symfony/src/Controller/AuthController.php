@@ -56,6 +56,8 @@ final class AuthController extends AbstractController
             'token' => $token,
             'login' => $user->getUserIdentifier(),
             'email' => $user->getEmail(),
+            'id' => $user->getId(),
+            'role' => $user->getRoles(),
         ]);
     }
 
