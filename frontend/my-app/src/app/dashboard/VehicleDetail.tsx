@@ -11,6 +11,7 @@ import { findById, history, manage, deleteVehicle } from "@/lib/api"
 import { type Vehicle } from "@/types/vehicle"
 import { VehicleRegisterPreview, type VehicleFormData } from "@/components/vehicle-register-preview"
 import { VehicleEditForm } from "@/components/vehicle-edit-form"
+import { RentDialog } from "@/components/rent-dialog"
 import { FullScreenLoader } from "@/components/FullScreenLoader"
 import { getBrands } from "@/lib/api"
 
@@ -27,6 +28,7 @@ export default function VehicleDetail() {
   const [editBrands, setEditBrands] = useState<{id: number, name: string}[]>([])
   const [vehicleHistory, setHistory] = useState<VehicleHistory[]>([])
   const [refreshKey, setRefreshKey] = useState(0)
+  const [rentOpen, setRentOpen] = useState(false)
   // const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function VehicleDetail() {
         regNumber: vehicle.reg_number,
         vinNumber: vehicle.vin_number,
         productionYear: vehicle.productionYear.toString(),
+        price: vehicle.price?.toString() ?? "",
         status: vehicle.status,
       })
     })()
@@ -74,6 +77,10 @@ export default function VehicleDetail() {
   }, [vehicleId, refreshKey])
 
   function handleAction(actionType: string) {
+    if (actionType === "rent") {
+      setRentOpen(true)
+      return
+    }
     if (actionType === "delete") {
       deleteVehicle(vehicleId)
         // .then((data) => {
@@ -139,6 +146,15 @@ export default function VehicleDetail() {
             )}
 
             <VehicleActionCards onAction={handleAction} />
+
+            {vehicleData && (
+              <RentDialog
+                vehicle={vehicleData}
+                open={rentOpen}
+                onOpenChange={setRentOpen}
+                onSuccess={() => setRefreshKey(k => k + 1)}
+              />
+            )}
 
             <VehicleHistoryTable history={vehicleHistory} />
           </div>

@@ -106,3 +106,19 @@ export async function changePassword(id: number, password: string){
 export async function editUser(id: number, data: object){
     return apiFetch(`${API_URL_BM}/edituser/${id}`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
 }
+
+export async function getClients(query = ""){
+    return apiFetch(`${API_URL_BM}/client?query=${encodeURIComponent(query)}`)
+}
+
+export async function addClient(data: object){
+    return apiFetch(`${API_URL_BM}/client`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
+}
+
+export async function getRentQuote(id: number, data: object){
+    return apiFetch(`${API_URL}/${id}/rent/quote`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
+}
+
+export async function rentVehicle(id: number, data: object){
+    return apiFetch(`${API_URL}/${id}/rent`, { method: 'POST', headers: { "Content-Type": "application/json" }, body: JSON.stringify(data)})
+}

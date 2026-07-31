@@ -17,6 +17,7 @@ const initialFormData: VehicleFormData = {
   regNumber: "",
   vinNumber: "",
   productionYear: 2026,
+  price: "",
   status: "",
 }
 
@@ -36,7 +37,8 @@ export default function Register() {
       model_id: Number(formData.modelId),
       reg_number: formData.regNumber,
       vin_number: formData.vinNumber,
-      productionYear: formData.productionYear,
+      productionYear: Number(formData.productionYear),
+      price: Number(formData.price),
       status: formData.status,
     })
       .then((data) => {

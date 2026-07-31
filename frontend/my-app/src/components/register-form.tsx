@@ -119,6 +119,18 @@ export function RegisterForm({ formData, onChange, onSubmit }: Props) {
               onChange={(e) => onChange("productionYear", e.target.value)}
             />
           </Field>
+          <Field>
+            <FieldLabel htmlFor="price">Price per day</FieldLabel>
+            <Input
+              id="price"
+              type="number"
+              placeholder="1500"
+              min={0}
+              step="0.01"
+              value={formData.price}
+              onChange={(e) => onChange("price", e.target.value)}
+            />
+          </Field>
         </FieldGroup>
       </FieldSet>
 

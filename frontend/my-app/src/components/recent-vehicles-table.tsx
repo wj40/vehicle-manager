@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "./ui/badge"
 import { type Vehicle } from "@/types/vehicle"
+import { formatPrice } from "@/lib/utils"
 
 type RecentVehiclesTableProps = {
   vehicles: Vehicle[]
@@ -45,6 +46,7 @@ export function RecentVehiclesTable({vehicles}: RecentVehiclesTableProps) {
             <TableHead>Brand</TableHead>
             <TableHead>Model</TableHead>
             <TableHead className="text-right">Production Year</TableHead>
+            <TableHead className="text-right">Price</TableHead>
             <TableHead className="text-right">Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -60,6 +62,7 @@ export function RecentVehiclesTable({vehicles}: RecentVehiclesTableProps) {
               <TableCell>{vehicle.brand_name}</TableCell>
               <TableCell>{vehicle.model_name}</TableCell>
               <TableCell className="text-right">{vehicle.productionYear}</TableCell>
+              <TableCell className="text-right">{formatPrice(vehicle.price)}</TableCell>
               <TableCell className="text-right">
                 <Badge
                     variant={statusVariant[vehicle.status] ?? "outline"}

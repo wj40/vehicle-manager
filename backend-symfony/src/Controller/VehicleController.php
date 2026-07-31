@@ -14,8 +14,13 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use App\Entity\Vehicle;
 use App\Repository\VehicleHistoryRepository;
 use App\Service\VehicleService;
+use App\Service\RentalService;
 use App\dto\RegisterVehicleInput;
 use App\dto\EditVehicleInput;
+use App\dto\RentVehicleInput;
+use App\dto\QuoteVehicleInput;
+use App\Repository\ClientRepository;
+use App\Entity\Rental;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -29,6 +34,7 @@ final class VehicleController extends AbstractController
             'reg_number' => $v->getRegNumber(),
             'vin_number' => $v->getVinNumber(),
             'productionYear' => $v->getProductionYear(),
+            'price' => $v->getPrice() !== null ? (float) $v->getPrice() : null,
             'status' => $v->getStatus(),
             'created_at' => $v->getCreatedAt()?->format('Y-m-d H:i:s'),
             'brand_id' => $v->getBrand()?->getId(),
@@ -63,6 +69,7 @@ final class VehicleController extends AbstractController
         $vehicle->setRegNumber($input->reg_number);
         $vehicle->setVinNumber($input->vin_number);
         $vehicle->setProductionYear((int) $input->productionYear);
+        $vehicle->setPrice($input->price !== null ? (string) $input->price : null);
         $vehicle->setStatus($input->status);
         $vehicle->setCreatedAt(new \DateTimeImmutable());
 
@@ -83,18 +90,52 @@ final class VehicleController extends AbstractController
 
     #[Route('/api/vehicle/{id}/rent', methods: 'POST')]
     public function rent(
-        #[MapEntity(expr: 'repository.findByIdWithJoins(id)')] Vehicle $vehicle, 
-        VehicleService $service): JsonResponse{
-            
-        $service->rentVehicle($vehicle);
-        return $this->json($this->vehicleToArray($vehicle));
+        #[MapEntity(expr: 'repository.findByIdWithJoins(id)')] Vehicle $vehicle,
+        #[MapRequestPayload] RentVehicleInput $input,
+        ClientRepository $clientRepository,
+        RentalService $rentalService): JsonResponse{
+
+        $client = $clientRepository->find($input->client_id);
+        if (!$client) {
+            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException("Client not found");
+        }
+        $rental = $rentalService->rent($vehicle, $client, $input->start_date, $input->end_date, $input->pesel);
+        return $this->json($this->rentalToArray($rental));
+    }
+
+    #[Route('/api/vehicle/{id}/rent/quote', methods: 'POST')]
+    public function rentQuote(
+        #[MapEntity(expr: 'repository.findByIdWithJoins(id)')] Vehicle $vehicle,
+        #[MapRequestPayload] QuoteVehicleInput $input,
+        RentalService $rentalService): JsonResponse{
+
+        return $this->json($rentalService->quote($vehicle, $input->start_date, $input->end_date));
+    }
+
+    private function rentalToArray(Rental $r): array
+    {
+        return [
+            'id' => $r->getId(),
+            'vehicle_id' => $r->getVehicle()?->getId(),
+            'client_id' => $r->getClient()?->getId(),
+            'client_name' => $r->getClient()?->getName(),
+            'client_surname' => $r->getClient()?->getSurname(),
+            'start_date' => $r->getStartDate()?->format('Y-m-d'),
+            'end_date' => $r->getEndDate()?->format('Y-m-d'),
+            'days' => $r->getDays(),
+            'price_per_day' => $r->getPricePerDay() !== null ? (float) $r->getPricePerDay() : null,
+            'discount_pct' => $r->getDiscountPct(),
+            'total_price' => $r->getTotalPrice() !== null ? (float) $r->getTotalPrice() : null,
+            'status' => $r->getStatus(),
+            'created_at' => $r->getCreatedAt()?->format('Y-m-d H:i:s'),
+        ];
     }
 
     #[Route('/api/vehicle/{id}/return', methods: 'POST')]
     public function returnVehicle(
         #[MapEntity(expr: 'repository.findByIdWithJoins(id)')] Vehicle $vehicle,
-        VehicleService $service): JsonResponse{
-        $service->returnVehicle($vehicle);
+        RentalService $rentalService): JsonResponse{
+        $rentalService->returnRental($vehicle);
         return $this->json($this->vehicleToArray($vehicle));
     }
 
@@ -140,6 +181,7 @@ final class VehicleController extends AbstractController
         if (isset($input->reg_number)) $current->setRegNumber($input->reg_number);
         if (isset($input->vin_number)) $current->setVinNumber($input->vin_number);
         if (isset($input->productionYear)) $current->setProductionYear($input->productionYear);
+        if (isset($input->price)) $current->setPrice((string) $input->price);
         if (isset($input->brand_id)) {
             $brand = $brandRepository->find($input->brand_id);
             $current->setBrand($brand);

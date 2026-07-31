@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Car, Truck, Bus, Motorbike, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, ArrowUp, ArrowDown } from "lucide-react"
 import type { Vehicle } from "@/types/vehicle"
+import { formatPrice } from "@/lib/utils"
 
 
 const typeIcon: Record<string, React.ElementType> = {
@@ -44,7 +45,7 @@ const statusDot: Record<string, string> = {
 
 const PAGE_SIZE_OPTIONS = ["5", "10", "25", "50"] as const
 
-type SortKey = "id" | "brand" | "model" | "productionYear"
+type SortKey = "id" | "brand" | "model" | "productionYear" | "price"
 
 type Props = {
   vehicles: Vehicle[]
@@ -96,6 +97,9 @@ export function AllVehiclesTable({vehicles, searchText}: Props) {
             break
           case "productionYear":
             cmp = a.productionYear - b.productionYear
+            break
+          case "price":
+            cmp = (a.price ?? 0) - (b.price ?? 0)
             break
         }
         return sortDir === "asc" ? cmp : -cmp
@@ -208,6 +212,11 @@ export function AllVehiclesTable({vehicles, searchText}: Props) {
                 Production Year {sortIndicator("productionYear")}
               </span>
             </TableHead>
+            <TableHead className="text-center font-semibold text-muted-foreground">
+              <span className={sortableHeadClass} onClick={() => handleSort("price")}>
+                Price {sortIndicator("price")}
+              </span>
+            </TableHead>
             <TableHead className="text-center font-semibold text-muted-foreground">Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -239,6 +248,9 @@ export function AllVehiclesTable({vehicles, searchText}: Props) {
                 </TableCell>
                 <TableCell className="text-center text-muted-foreground">
                   {vehicle.productionYear}
+                </TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  {formatPrice(vehicle.price)}
                 </TableCell>
                 <TableCell className="text-center">
                   <Badge

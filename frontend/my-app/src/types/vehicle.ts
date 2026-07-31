@@ -6,6 +6,7 @@ export interface Vehicle {
     reg_number: string
     vin_number: string
     productionYear: number
+    price: number
     status: "available" | "rented" | "service"
     created_at?: string
     brand_name: string

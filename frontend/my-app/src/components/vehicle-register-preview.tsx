@@ -14,6 +14,7 @@ export type VehicleFormData = {
   brandId: number
   modelId: number
   productionYear: number
+  price: string
   status: string
   regNumber: string
   vinNumber: string
@@ -67,6 +68,10 @@ export function VehicleRegisterPreview({ formData }: Props) {
         <div>
           <p className="text-muted-foreground">Production year</p>
           <p className="font-medium">{formData.productionYear || "-"}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Price per day</p>
+          <p className="font-medium">{formData.price || "-"}</p>
         </div>
         <div>
           <p className="text-muted-foreground">Registration number</p>

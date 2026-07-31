@@ -39,7 +39,11 @@ class RegisterVehicleInput{
 
         #[Assert\NotNull()]
         #[Assert\Range(min: 1900, minMessage: 'Vehicle is too old')]
-        public string $productionYear,
+        public int $productionYear,
+
+        #[Assert\NotBlank]
+        #[Assert\Range(min: 0, minMessage: 'Price cannot be negative')]
+        public float $price,
 
         #[Assert\NotNull]
         public VehicleStatus $status

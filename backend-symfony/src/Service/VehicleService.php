@@ -41,16 +41,6 @@ class VehicleService{
         $this->entityManager->flush();
     }
     
-    public function returnVehicle(Vehicle $vehicle): void{
-        $status = $vehicle->getStatus();
-        if($status != VehicleStatus::Rented){
-            throw new \Exception('Vehicle is not rented');
-        }
-        $this->logHistory($vehicle, 'return', 'available');
-        $vehicle->setStatus(VehicleStatus::Available);
-        $this->entityManager->flush();
-    }
-
     public function sendVehicleToService(Vehicle $vehicle): void{
         $status = $vehicle->getStatus();
         if($status === VehicleStatus::Service){

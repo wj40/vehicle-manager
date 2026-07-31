@@ -46,6 +46,7 @@ export function VehicleEditForm({vehicle, brands, onSave, onCancel}: Props) {
   const [modelId, setModelId] = useState(vehicle.model_id)
   const [models, setModels] = useState<{id: number, name: string}[]>([])
   const [productionYear, setProductionYear] = useState(String(vehicle.productionYear))
+  const [price, setPrice] = useState(String(vehicle.price ?? ""))
   const [regNumber, setRegNumber] = useState(vehicle.reg_number)
   const [vinNumber, setVinNumber] = useState(vehicle.vin_number)
   const [saving, setSaving] = useState(false)
@@ -73,7 +74,8 @@ export function VehicleEditForm({vehicle, brands, onSave, onCancel}: Props) {
         model_id: modelId,
         reg_number: regNumber,
         vin_number: vinNumber,
-        productionYear,
+        productionYear: Number(productionYear),
+        price: Number(price),
       })
       onSave()
     } catch (err) {
@@ -134,6 +136,17 @@ export function VehicleEditForm({vehicle, brands, onSave, onCancel}: Props) {
               placeholder="2026"
               value={productionYear}
               onChange={(e) => setProductionYear(e.target.value)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel>Price per day</FieldLabel>
+            <Input
+              type="number"
+              placeholder="1500"
+              min={0}
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
             />
           </Field>
           <Field>

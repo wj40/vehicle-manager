@@ -44,6 +44,9 @@ class Vehicle
     #[ORM\JoinColumn(nullable: false)]
     private ?VehicleModel $model = null;
 
+    #[ORM\Column(type: 'decimal', precision: 11, scale: 2, nullable: true)]
+    private ?string $price = null;
+
     /**
      * @var Collection<int, VehicleHistory>
      */
@@ -152,6 +155,18 @@ class Vehicle
     public function setModel(?VehicleModel $model): static
     {
         $this->model = $model;
+
+        return $this;
+    }
+
+    public function getPrice(): ?string
+    {
+        return $this->price;
+    }
+
+    public function setPrice(?string $price): static
+    {
+        $this->price = $price;
 
         return $this;
     }
